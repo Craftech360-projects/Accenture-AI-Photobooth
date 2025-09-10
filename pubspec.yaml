@@ -1,0 +1,33 @@
+name: accenture_photobooth
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/fonts/
+
+  fonts:
+    - family: GraphikTrial
+      fonts:
+        - asset: assets/fonts/Graphik-Black-Trial.otf
+        - asset: assets/fonts/Graphik-Bold-Trial.otf
+        - asset: assets/fonts/Graphik-Light-Trial.otf
+        - asset: assets/fonts/Graphik-Medium-Trial.otf
+        - asset: assets/fonts/Graphik-Regular-Trial.otf
+        - asset: assets/fonts/Graphik-Semibold-Trial.otf
