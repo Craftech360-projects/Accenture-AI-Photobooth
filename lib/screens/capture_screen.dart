@@ -49,6 +49,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
         selectedCamera,
         ResolutionPreset.high,
         enableAudio: false,
+        imageFormatGroup: ImageFormatGroup.jpeg,
       );
 
       await _cameraController!.initialize();
@@ -164,8 +165,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
     final img.Image? originalImage = img.decodeImage(imageBytes);
     if (originalImage == null) return imageBytes;
 
-    final int originalWidth = originalImage.width;
-    final int originalHeight = originalImage.height;
+    // Flip horizontally to correct front camera mirroring
+    final img.Image flippedImage = img.flipHorizontal(originalImage);
+
+    final int originalWidth = flippedImage.width;
+    final int originalHeight = flippedImage.height;
 
     // Calculate target dimensions maintaining aspect ratio
     final double targetAspectRatio = widthRatio / heightRatio;
@@ -187,7 +191,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
 
     final img.Image croppedImage = img.copyCrop(
-      originalImage,
+      flippedImage,
       x: offsetX,
       y: offsetY,
       width: cropWidth,
@@ -217,6 +221,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
       newCamera,
       ResolutionPreset.high,
       enableAudio: false,
+      imageFormatGroup: ImageFormatGroup.jpeg,
     );
 
     try {
