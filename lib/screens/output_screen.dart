@@ -3,6 +3,10 @@ import 'package:accenture_photobooth/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:http/http.dart' as http;
 
 class OutputScreen extends StatefulWidget {
   const OutputScreen({super.key});
@@ -49,11 +53,83 @@ class _OutputScreenState extends State<OutputScreen> {
     );
   }
 
-  void _printImage() {
-    // Print functionality would need platform-specific implementation
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Print functionality not available in this version')),
-    );
+  void _printImage() async {
+    final userModel = Provider.of<UserSelectionModel>(context, listen: false);
+    
+    if (!userModel.hasProcessedImage) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No image available to print')),
+      );
+      return;
+    }
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text('Preparing image for printing...'),
+              ],
+            ),
+          );
+        },
+      );
+
+      // Download the image
+      final response = await http.get(Uri.parse(userModel.processedImageUrl!));
+      if (response.statusCode != 200) {
+        throw Exception('Failed to download image');
+      }
+
+      // Create PDF document
+      final pdf = pw.Document();
+      final imageBytes = response.bodyBytes;
+      final image = pw.MemoryImage(imageBytes);
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return pw.Center(
+              child: pw.Image(
+                image,
+                fit: pw.BoxFit.contain,
+              ),
+            );
+          },
+        ),
+      );
+
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Show print dialog
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: 'Accenture_Photobooth_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
+
+    } catch (e) {
+      // Close loading dialog if still open
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to print image: $e')),
+        );
+      }
+    }
   }
 
   @override
