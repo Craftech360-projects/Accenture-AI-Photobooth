@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 class UserSelectionModel extends ChangeNotifier {
   String? _gender;
   String? _category;
+  String? _theme;
+  String? _selectedBackground;
   String? _uniqueId;
   Uint8List? _capturedImage;
   String? _processedImageUrl;
@@ -15,6 +17,8 @@ class UserSelectionModel extends ChangeNotifier {
   // Getters
   String? get gender => _gender;
   String? get category => _category;
+  String? get theme => _theme;
+  String? get selectedBackground => _selectedBackground;
   String? get uniqueId => _uniqueId;
   Uint8List? get capturedImage => _capturedImage;
   String? get processedImageUrl => _processedImageUrl;
@@ -31,6 +35,16 @@ class UserSelectionModel extends ChangeNotifier {
 
   void setCategory(String category) {
     _category = category;
+    notifyListeners();
+  }
+
+  void setTheme(String theme) {
+    _theme = theme;
+    notifyListeners();
+  }
+
+  void setSelectedBackground(String background) {
+    _selectedBackground = background;
     notifyListeners();
   }
 
@@ -73,6 +87,8 @@ class UserSelectionModel extends ChangeNotifier {
   void reset() {
     _gender = null;
     _category = null;
+    _theme = null;
+    _selectedBackground = null;
     _uniqueId = null;
     _capturedImage = null;
     _processedImageUrl = null;

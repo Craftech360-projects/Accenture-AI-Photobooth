@@ -45,31 +45,55 @@ class SupabaseService {
     }
   }
 
-  /// Get a random character theme image based on gender
-  Future<String?> getRandomCharacterImage(String gender) async {
+  /// Get a character theme image based on gender and selected theme
+  Future<String?> getCharacterImage(String gender, String selectedTheme) async {
     try {
-      // Select random theme
-      final randomTheme = themes[Random().nextInt(themes.length)];
-      
-      // Select random image number (1-5)
+      // Select random image number (1-5) for variety
       final randomImageNum = Random().nextInt(5) + 1;
       final imageNum = randomImageNum.toString().padLeft(2, '0');
       
       // Construct the path based on the bucket structure
       final fileName = '${gender}_$imageNum.png';
-      final imagePath = '$gender/$randomTheme/$fileName';
+      final imagePath = '$gender/$selectedTheme/$fileName';
       
       // Get public URL
       final url = _client.storage.from(themesBucket).getPublicUrl(imagePath);
       
       return url;
     } catch (e) {
+      print('Error getting character image: $e');
+      return null;
+    }
+  }
+
+  /// Get a random character theme image based on gender (legacy method for backward compatibility)
+  Future<String?> getRandomCharacterImage(String gender) async {
+    try {
+      // Select random theme
+      final randomTheme = themes[Random().nextInt(themes.length)];
+      
+      // Use the new method with random theme
+      return await getCharacterImage(gender, randomTheme);
+    } catch (e) {
       print('Error getting random character image: $e');
       return null;
     }
   }
 
-  /// Get a random background image for BG removal
+  /// Get a specific background image by filename
+  Future<String?> getSelectedBackground(String backgroundFileName) async {
+    try {
+      // Get public URL for the selected background
+      final url = _client.storage.from(backgroundsBucket).getPublicUrl(backgroundFileName);
+      
+      return url;
+    } catch (e) {
+      print('Error getting selected background: $e');
+      return null;
+    }
+  }
+
+  /// Get a random background image for BG removal (legacy method for backward compatibility)
   Future<String?> getRandomBackground() async {
     try {
       // Select random background (1-3)
@@ -77,10 +101,8 @@ class SupabaseService {
       final bgNum = randomBgNum.toString().padLeft(2, '0');
       final fileName = 'background_$bgNum.png';
       
-      // Get public URL
-      final url = _client.storage.from(backgroundsBucket).getPublicUrl(fileName);
-      
-      return url;
+      // Use the new method with random filename
+      return await getSelectedBackground(fileName);
     } catch (e) {
       print('Error getting random background: $e');
       return null;
@@ -91,7 +113,7 @@ class SupabaseService {
   Future<bool> saveImageRecord({
     required String uniqueId,
     required String imageUrl,
-    required String gender,
+    String? gender, // Made optional for BG Removal
     String? characterImage,
     String? userName,
     String? userEmail,
@@ -100,7 +122,7 @@ class SupabaseService {
       await _client.from(imagesTable).insert({
         'unique_id': uniqueId,
         'image_url': imageUrl,
-        'gender': gender,
+        'gender': gender, // Can be null for BG Removal
         'characterimage': characterImage,
         'name': userName,
         'email': userEmail,

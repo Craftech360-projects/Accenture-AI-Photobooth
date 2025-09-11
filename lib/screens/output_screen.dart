@@ -92,14 +92,27 @@ class _OutputScreenState extends State<OutputScreen> {
       final imageBytes = response.bodyBytes;
       final image = pw.MemoryImage(imageBytes);
 
+      // Create custom 4x6 inch page format (portrait)
+      const customPageFormat = PdfPageFormat(
+        4 * PdfPageFormat.inch,  // width: 4 inches
+        6 * PdfPageFormat.inch,  // height: 6 inches
+      );
+
       pdf.addPage(
         pw.Page(
-          pageFormat: PdfPageFormat.a4,
+          pageFormat: customPageFormat,
           build: (pw.Context context) {
+            // Center and rotate the image to fit on portrait paper with zoom
             return pw.Center(
-              child: pw.Image(
-                image,
-                fit: pw.BoxFit.contain,
+              child: pw.Transform.rotate(
+                angle: 1.5708, // 90 degrees in radians (π/2)
+                child: pw.Transform.scale(
+                  scale: 1.3, // 30% zoom increase
+                  child: pw.Image(
+                    image,
+                    fit: pw.BoxFit.contain,
+                  ),
+                ),
               ),
             );
           },

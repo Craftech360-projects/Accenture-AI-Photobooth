@@ -1,4 +1,4 @@
-import 'package:accenture_photobooth/screens/gender_screen.dart';
+import 'package:accenture_photobooth/screens/category_screen.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -49,7 +49,7 @@ class WelcomeScreen extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => GenderScreen()),
+                      MaterialPageRoute(builder: (context) => CategoryScreen()),
                     ),
                     child: Text("Start"),
                   ),

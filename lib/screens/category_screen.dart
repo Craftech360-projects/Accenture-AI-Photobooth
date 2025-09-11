@@ -1,5 +1,6 @@
 import 'package:accenture_photobooth/models/user_selection_model.dart';
-import 'package:accenture_photobooth/screens/capture_screen.dart';
+import 'package:accenture_photobooth/screens/background_selection_screen.dart';
+import 'package:accenture_photobooth/screens/gender_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +17,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
   @override
   Widget build(BuildContext context) {
     final userModel = Provider.of<UserSelectionModel>(context);
-    
+
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -35,10 +36,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    "Select Category", 
-                    style: TextStyle(fontSize: 70),
-                  ),
+                  const Text("Select Category", style: TextStyle(fontSize: 70)),
                   const SizedBox(height: 40),
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -56,9 +54,11 @@ class _CategoryScreenState extends State<CategoryScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
                             border: Border.all(
-                              width: selectedCategory == 'ai_transformation' ? 4 : 3, 
-                              color: selectedCategory == 'ai_transformation' 
-                                  ? Colors.blue 
+                              width: selectedCategory == 'ai_transformation'
+                                  ? 4
+                                  : 3,
+                              color: selectedCategory == 'ai_transformation'
+                                  ? Colors.blue
                                   : Colors.white,
                             ),
                           ),
@@ -72,7 +72,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                               ),
                               const SizedBox(height: 48),
                               const Text(
-                                "AI Transformation",
+                                "Individual Mode",
                                 style: TextStyle(fontSize: 35),
                               ),
                             ],
@@ -93,9 +93,9 @@ class _CategoryScreenState extends State<CategoryScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
                             border: Border.all(
-                              width: selectedCategory == 'bg_removal' ? 4 : 3, 
-                              color: selectedCategory == 'bg_removal' 
-                                  ? Colors.green 
+                              width: selectedCategory == 'bg_removal' ? 4 : 3,
+                              color: selectedCategory == 'bg_removal'
+                                  ? Colors.green
                                   : Colors.white,
                             ),
                           ),
@@ -109,7 +109,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                               ),
                               const SizedBox(height: 48),
                               const Text(
-                                "BG Removal", 
+                                "Group Mode",
                                 style: TextStyle(fontSize: 35),
                               ),
                             ],
@@ -127,12 +127,26 @@ class _CategoryScreenState extends State<CategoryScreen> {
                           ? () {
                               // Store selection in state management
                               userModel.setCategory(selectedCategory!);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const CaptureScreen(),
-                                ),
-                              );
+
+                              // Navigate based on category
+                              if (selectedCategory == 'bg_removal') {
+                                // For BG Removal: go to background selection
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const BackgroundSelectionScreen(),
+                                  ),
+                                );
+                              } else {
+                                // For AI Transformation: go to gender selection
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const GenderScreen(),
+                                  ),
+                                );
+                              }
                             }
                           : null,
                       child: const Text("Next"),

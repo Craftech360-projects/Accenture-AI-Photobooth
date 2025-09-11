@@ -61,7 +61,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
       await supabaseService.saveImageRecord(
         uniqueId: userModel.uniqueId!,
         imageUrl: userImageUrl,
-        gender: userModel.gender!,
+        gender: userModel.gender, // Can be null for BG Removal
       );
 
       if (userModel.isAiTransformation) {
@@ -95,7 +95,7 @@ class _ProcessingScreenState extends State<ProcessingScreen>
       _statusMessage = 'Selecting your character...';
     });
 
-    final characterImageUrl = await supabaseService.getRandomCharacterImage(userModel.gender!);
+    final characterImageUrl = await supabaseService.getCharacterImage(userModel.gender!, userModel.theme!);
     if (characterImageUrl == null) {
       throw Exception('Failed to get character image');
     }
@@ -139,14 +139,14 @@ class _ProcessingScreenState extends State<ProcessingScreen>
     SupabaseService supabaseService,
     String userImageUrl,
   ) async {
-    // Get random background
+    // Get selected background
     setState(() {
-      _statusMessage = 'Selecting background...';
+      _statusMessage = 'Loading selected background...';
     });
 
-    final backgroundUrl = await supabaseService.getRandomBackground();
+    final backgroundUrl = await supabaseService.getSelectedBackground(userModel.selectedBackground!);
     if (backgroundUrl == null) {
-      throw Exception('Failed to get background image');
+      throw Exception('Failed to get selected background image');
     }
 
     // Update character image field with background reference
