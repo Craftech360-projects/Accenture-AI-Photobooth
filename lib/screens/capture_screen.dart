@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+
 import 'package:accenture_photobooth/models/user_selection_model.dart';
 import 'package:accenture_photobooth/services/supabase_service.dart';
 import 'package:camera/camera.dart';
@@ -31,7 +32,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
   Future<void> _initializeCamera() async {
     try {
       _cameras = await availableCameras();
-      
+
       if (_cameras == null || _cameras!.isEmpty) {
         setState(() {
           _errorMessage = 'No cameras available';
@@ -71,7 +72,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
   }
 
   Future<void> _captureImage() async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized || _isCapturing || _isCountingDown) {
+    if (_cameraController == null ||
+        !_cameraController!.value.isInitialized ||
+        _isCapturing ||
+        _isCountingDown) {
       return;
     }
 
@@ -100,11 +104,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
     try {
       final XFile imageFile = await _cameraController!.takePicture();
       final Uint8List imageBytes = await imageFile.readAsBytes();
-      
+
       if (!mounted) return;
-      
+
       final userModel = Provider.of<UserSelectionModel>(context, listen: false);
-      
+
       // Crop image based on selected category
       int widthRatio, heightRatio;
       if (userModel.isBgRemoval) {
@@ -116,28 +120,31 @@ class _CaptureScreenState extends State<CaptureScreen> {
         widthRatio = 9;
         heightRatio = 16;
       }
-      
+
       // Generate unique ID if not already set
       if (userModel.uniqueId == null) {
         final supabaseService = SupabaseService();
         userModel.setUniqueId(supabaseService.generateUniqueId());
       }
-      
+
       // Store raw image first for immediate navigation
       userModel.setCapturedImage(imageBytes);
-      
+
       // Navigate to processing screen immediately
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/processing');
       }
-      
+
       // Process cropping asynchronously after navigation
       Future.microtask(() async {
-        final croppedBytes = await _cropToAspectRatio(imageBytes, widthRatio, heightRatio);
+        final croppedBytes = await _cropToAspectRatio(
+          imageBytes,
+          widthRatio,
+          heightRatio,
+        );
         // Update with cropped image
         userModel.setCapturedImage(croppedBytes);
       });
-      
     } catch (e) {
       setState(() {
         _errorMessage = 'Failed to capture image: $e';
@@ -149,20 +156,24 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
   }
 
-  Future<Uint8List> _cropToAspectRatio(Uint8List imageBytes, int widthRatio, int heightRatio) async {
+  Future<Uint8List> _cropToAspectRatio(
+    Uint8List imageBytes,
+    int widthRatio,
+    int heightRatio,
+  ) async {
     final img.Image? originalImage = img.decodeImage(imageBytes);
     if (originalImage == null) return imageBytes;
 
     final int originalWidth = originalImage.width;
     final int originalHeight = originalImage.height;
-    
+
     // Calculate target dimensions maintaining aspect ratio
     final double targetAspectRatio = widthRatio / heightRatio;
     final double currentAspectRatio = originalWidth / originalHeight;
-    
+
     int cropWidth, cropHeight;
     int offsetX = 0, offsetY = 0;
-    
+
     if (currentAspectRatio > targetAspectRatio) {
       // Image is wider than target - crop width
       cropHeight = originalHeight;
@@ -174,7 +185,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
       cropHeight = (originalWidth / targetAspectRatio).round();
       offsetY = (originalHeight - cropHeight) ~/ 2;
     }
-    
+
     final img.Image croppedImage = img.copyCrop(
       originalImage,
       x: offsetX,
@@ -182,7 +193,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
       width: cropWidth,
       height: cropHeight,
     );
-    
+
     return Uint8List.fromList(img.encodeJpg(croppedImage, quality: 90));
   }
 
@@ -194,7 +205,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     });
 
     final currentDirection = _cameraController!.description.lensDirection;
-    
+
     final newCamera = _cameras!.firstWhere(
       (camera) => camera.lensDirection != currentDirection,
       orElse: () => _cameras!.first,
@@ -210,9 +221,9 @@ class _CaptureScreenState extends State<CaptureScreen> {
 
     try {
       await _cameraController!.initialize();
-      
+
       if (!mounted) return;
-      
+
       setState(() {
         _isInitialized = true;
       });
@@ -236,13 +247,13 @@ class _CaptureScreenState extends State<CaptureScreen> {
             width: double.infinity,
             height: double.infinity,
           ),
-          
+
           Center(child: _buildCameraView()),
-          
+
           // Countdown overlay
           if (_isCountingDown)
             Container(
-              color: Colors.black.withValues(alpha: 0.5),
+              color: Colors.black.withValues(alpha: 0.1),
               child: Center(
                 child: Container(
                   width: 200,
@@ -264,7 +275,6 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 ),
               ),
             ),
-          
 
           // Capture button positioned below camera feed
           if (!_isCapturing)
@@ -275,8 +285,10 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 width: 336,
                 height: 84,
                 child: ElevatedButton(
-                  onPressed: (_isInitialized && !_isCountingDown) ? _captureImage : null,
-                  child: _isCountingDown 
+                  onPressed: (_isInitialized && !_isCountingDown)
+                      ? _captureImage
+                      : null,
+                  child: _isCountingDown
                       ? Text("$_countdown")
                       : const Text("Capture"),
                 ),
@@ -284,7 +296,11 @@ class _CaptureScreenState extends State<CaptureScreen> {
             ),
 
           // Camera switch button
-          if (_cameras != null && _cameras!.length > 1 && _isInitialized && !_isCapturing && !_isCountingDown)
+          if (_cameras != null &&
+              _cameras!.length > 1 &&
+              _isInitialized &&
+              !_isCapturing &&
+              !_isCountingDown)
             Positioned(
               top: MediaQuery.of(context).padding.top + 20,
               right: 20,
@@ -297,7 +313,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 ),
               ),
             ),
-            
+
           // Back button
           if (!_isCountingDown)
             Positioned(
@@ -322,11 +338,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
       return Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.error_outline,
-            color: Colors.red,
-            size: 60,
-          ),
+          const Icon(Icons.error_outline, color: Colors.red, size: 60),
           const SizedBox(height: 16),
           Text(
             _errorMessage!,
@@ -338,9 +350,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
     }
 
     if (!_isInitialized || _cameraController == null) {
-      return const CircularProgressIndicator(
-        color: Colors.white,
-      );
+      return const CircularProgressIndicator(color: Colors.white);
     }
 
     return Consumer<UserSelectionModel>(
@@ -353,7 +363,8 @@ class _CaptureScreenState extends State<CaptureScreen> {
             // Dynamic aspect ratio based on category
             double targetAspectRatio;
             if (userModel.isBgRemoval) {
-              targetAspectRatio = 16 / 9; // Landscape for BG Removal (1920x1080)
+              targetAspectRatio =
+                  16 / 9; // Landscape for BG Removal (1920x1080)
             } else {
               targetAspectRatio = 9 / 16; // Portrait for AI Transformation
             }
@@ -382,7 +393,7 @@ class _CaptureScreenState extends State<CaptureScreen> {
                 cameraWidth = cameraHeight * targetAspectRatio;
               }
             }
-            
+
             return Container(
               width: cameraWidth,
               height: cameraHeight,
